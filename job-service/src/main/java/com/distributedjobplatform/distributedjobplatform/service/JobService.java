@@ -1,5 +1,6 @@
 package com.distributedjobplatform.distributedjobplatform.service;
 
+import com.distributedjobplatform.distributedjobplatform.exception.JobNotFoundException;
 import com.distributedjobplatform.distributedjobplatform.model.Job;
 import com.distributedjobplatform.distributedjobplatform.repository.JobRepository;
 import org.springframework.stereotype.Service;
@@ -16,5 +17,10 @@ public class JobService {
     public Job createJob(String type, String payload) {
         Job job = new Job(type, payload);
         return jobRepository.save(job);
+    }
+
+    public Job getJobById(java.util.UUID id) {
+        return jobRepository.findById(id)
+                .orElseThrow(() -> new JobNotFoundException(id));
     }
 }
