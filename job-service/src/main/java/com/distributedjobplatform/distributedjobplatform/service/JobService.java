@@ -23,4 +23,8 @@ public class JobService {
         return jobRepository.findById(id)
                 .orElseThrow(() -> new JobNotFoundException(id));
     }
+
+    public java.util.List<Job> getAllJobs() {
+        return jobRepository.findAll();
+    }
 }

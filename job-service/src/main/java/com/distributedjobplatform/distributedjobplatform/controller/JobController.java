@@ -7,6 +7,7 @@ import com.distributedjobplatform.distributedjobplatform.service.JobService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -30,5 +31,14 @@ public class JobController {
     public ResponseEntity<JobResponse> getJob(@PathVariable UUID id) {
         Job job = jobService.getJobById(id);
         return ResponseEntity.ok(JobResponse.from(job));
+    }
+
+
+    @GetMapping
+    public ResponseEntity<List<JobResponse>> getAllJobs() {
+        List<JobResponse> jobs = jobService.getAllJobs().stream()
+                .map(JobResponse::from)
+                .toList();
+        return ResponseEntity.ok(jobs);
     }
 }
