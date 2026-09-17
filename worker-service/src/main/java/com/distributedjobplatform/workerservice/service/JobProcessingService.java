@@ -23,17 +23,27 @@ public class JobProcessingService {
         job.setStatus(JobStatus.RUNNING);
         jobRepository.save(job);
 
-        simulateWork();
+        try {
+            simulateWork(job);
+            job.setStatus(JobStatus.SUCCESS);
+        } catch (Exception e) {
+            System.out.println("Job processing failed for id=" + jobId + ": " + e.getMessage());
+            job.setStatus(JobStatus.FAILED);
+        }
 
-        job.setStatus(JobStatus.SUCCESS);
         jobRepository.save(job);
     }
 
-    private void simulateWork() {
+    private void simulateWork(Job job) {
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while processing job", e);
+        }
+
+        if ("fail".equalsIgnoreCase(job.getPayload())) {
+            throw new RuntimeException("Simulated processing failure");
         }
     }
 }
