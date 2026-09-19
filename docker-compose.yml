@@ -75,5 +75,19 @@ services:
       - job-service
       - worker-service
 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: distributed-job-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   postgres-data:
+  grafana-data:
