@@ -88,6 +88,17 @@ services:
     depends_on:
       - prometheus
 
+  tempo:
+    image: grafana/tempo:2.9.0
+    container_name: distributed-job-tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./infrastructure/tempo/tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+
 volumes:
   postgres-data:
   grafana-data:
