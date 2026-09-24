@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### K8S ###
+kubectl
+minikube-linux-amd64
