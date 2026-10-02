@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker-service-scaledobject
+  namespace: distributed-job-platform
+spec:
+  scaleTargetRef:
+    name: worker-service
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  cooldownPeriod: 30
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.distributed-job-platform.svc.cluster.local:9092
+        consumerGroup: worker-service
+        topic: jobs.created
+        lagThreshold: "5"
+        offsetResetPolicy: earliest
