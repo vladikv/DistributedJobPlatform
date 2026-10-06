@@ -36,6 +36,8 @@ spec:
               value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               value: "1"
+            - name: KAFKA_NUM_PARTITIONS
+              value: "5"
           volumeMounts:
             - name: kafka-data
               mountPath: /var/lib/kafka/data
