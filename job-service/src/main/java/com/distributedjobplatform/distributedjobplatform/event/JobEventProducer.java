@@ -42,7 +42,7 @@ public class JobEventProducer {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new EventPublishException(event.jobId(), e);
-        } catch (ExecutionException | TimeoutException e) {
+        } catch (Exception e) {
             throw new EventPublishException(event.jobId(), e);
         }
     }
