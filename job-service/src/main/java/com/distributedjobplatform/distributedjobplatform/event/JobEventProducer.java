@@ -1,6 +1,9 @@
 package com.distributedjobplatform.distributedjobplatform.event;
 
 import com.distributedjobplatform.distributedjobplatform.exception.EventPublishException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import org.slf4j.Logger;
@@ -8,9 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Component
 public class JobEventProducer {
@@ -22,17 +23,29 @@ public class JobEventProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final Retry retry;
+    private final CircuitBreaker circuitBreaker;
 
-    public JobEventProducer(KafkaTemplate<String, Object> kafkaTemplate, RetryRegistry retryRegistry) {
+    public JobEventProducer(KafkaTemplate<String, Object> kafkaTemplate,
+                            RetryRegistry retryRegistry,
+                            CircuitBreakerRegistry circuitBreakerRegistry) {
         this.kafkaTemplate = kafkaTemplate;
         this.retry = retryRegistry.retry("kafkaPublish");
+        this.circuitBreaker = circuitBreakerRegistry.circuitBreaker("kafkaPublish");
+
         this.retry.getEventPublisher().onRetry(e ->
                 log.warn("Kafka publish failed, retry attempt {}: {}",
                         e.getNumberOfRetryAttempts(), e.getLastThrowable().getMessage()));
+        this.circuitBreaker.getEventPublisher().onStateTransition(e ->
+                log.warn("Circuit breaker '{}' state change: {}",
+                        e.getCircuitBreakerName(), e.getStateTransition()));
     }
 
     public void publish(JobCreatedEvent event) {
-        Retry.decorateRunnable(retry, () -> send(event)).run();
+        try {
+            retry.executeRunnable(() -> circuitBreaker.executeRunnable(() -> send(event)));
+        } catch (CallNotPermittedException e) {
+            throw new EventPublishException(event.jobId(), e);
+        }
     }
 
     private void send(JobCreatedEvent event) {
