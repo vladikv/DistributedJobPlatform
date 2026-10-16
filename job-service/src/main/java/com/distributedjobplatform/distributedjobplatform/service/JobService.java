@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import com.distributedjobplatform.distributedjobplatform.exception.EventPublishException;
+import com.distributedjobplatform.distributedjobplatform.model.JobStatus;
 
 @Service
 public class JobService {
@@ -25,7 +27,13 @@ public class JobService {
         Job job = new Job(type, payload);
         Job savedJob = jobRepository.save(job);
 
-        jobEventProducer.publish(new JobCreatedEvent(savedJob.getId(), savedJob.getType(), savedJob.getPayload()));
+        try {
+            jobEventProducer.publish(new JobCreatedEvent(savedJob.getId(), savedJob.getType(), savedJob.getPayload()));
+        } catch (EventPublishException e) {
+            savedJob.setStatus(JobStatus.FAILED);
+            jobRepository.save(savedJob);
+            throw e;
+        }
 
         return savedJob;
     }
